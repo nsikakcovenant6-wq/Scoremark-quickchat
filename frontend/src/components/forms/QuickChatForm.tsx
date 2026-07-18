@@ -1,19 +1,53 @@
 import { useState } from "react";
 import axios from "axios";
 import { QRCodeCanvas } from "qrcode.react";
+import { FaWhatsapp, FaSpinner, FaDownload, FaCopy } from "react-icons/fa";
 // react-hot-toast may not be installed in some environments; use alert fallback
 const toast = {
   error: (msg: string) => alert(msg),
+  success: (msg: string) => alert(msg),
 };
-import {
-  FaWhatsapp,
-  FaSpinner,
-} from "react-icons/fa";
 export default function QuickChatForm() {
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [generatedLink, setGeneratedLink] = useState("");
   const [loading, setLoading] = useState(false);
+
+    const copyLink = async () => {
+      if (!generatedLink) return;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(generatedLink);
+        } else {
+          const textarea = document.createElement("textarea");
+          textarea.value = generatedLink;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+        }
+        // use toast.error fallback defined above for lack of toast lib
+        if ((toast as any).success) {
+          (toast as any).success("Link copied to clipboard.");
+        } else {
+          alert("Link copied to clipboard.");
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to copy link.");
+      }
+    };
+
+    const downloadQR = () => {
+      if (!generatedLink) return;
+      const canvas = document.querySelector("canvas") as HTMLCanvasElement | null;
+      if (!canvas) return;
+      const image = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = image;
+      link.download = "qrcode.png";
+      link.click();
+    };
 
  const generateLink = async () => {
   if (!phone || !message) {
@@ -21,25 +55,26 @@ export default function QuickChatForm() {
     return;
   }
 
+  setLoading(true);
+
   const cleanPhone = phone.replace(/\D/g, "");
   const normalizedPhone = cleanPhone.replace(/^0+/, "");
 
-  setLoading(true);
   try {
-    const response = await axios.post(
-      "http://localhost:5000/generate",
-      {
-        phone: normalizedPhone,
-        message,
-      }
-    );
+   const response = await axios.post(
+  "http://localhost:5000/generate",
+  {
+    phone: normalizedPhone,
+    message,
+  }
+);
 
-    setGeneratedLink(response.data.shortUrl);
+// Keep the spinner visible for at least 1 second
+await new Promise((resolve) => setTimeout(resolve, 1000));
 
-setTimeout(() => {
-  setLoading(false);
-}, 700);
+setGeneratedLink(response.data.shortUrl);
 
+toast.success("WhatsApp link generated successfully!");
   } catch (error) {
     console.error(error);
     toast.error("Failed to generate link.");
@@ -99,20 +134,46 @@ setTimeout(() => {
     </>
   ) : (
     <>
-      <FaWhatsapp className="text-xl" />
+      <FaWhatsapp />
       Generate WhatsApp Link
     </>
   )}
 </button>
 
-          <div className="flex justify-center mt-8 bg-white p-6 rounded-2xl">
+          {generatedLink && (
+  <div className="mt-8">
 
-            <QRCodeCanvas
-              value={generatedLink}
-              size={220}
-            />
+    <input
+      value={generatedLink}
+      readOnly
+      className="w-full p-4 rounded-xl bg-black/30 border border-gray-700"
+    />
 
-          </div>
+   <button
+  onClick={copyLink}
+  className="mt-4 w-full bg-green-600 hover:bg-green-700 py-3 rounded-xl flex items-center justify-center gap-2"
+>
+  <FaCopy />
+  Copy Link
+</button>
+
+<button
+  onClick={downloadQR}
+  className="mt-3 w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl flex items-center justify-center gap-2"
+>
+  <FaDownload />
+  Download QR Code
+</button>
+
+    <div className="flex justify-center mt-6 bg-white p-6 rounded-2xl">
+      <QRCodeCanvas
+        value={generatedLink}
+        size={220}
+      />
+    </div>
+
+  </div>
+)}
 
         </div>
 

@@ -41,8 +41,8 @@
     "victory-vendor": "^37.3.6"
   },
   "scripts": {
-    "dev": "nodemon app/server.js",
-    "start": "node app/server.js"
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
   },
   "keywords": [],
   "author": "",

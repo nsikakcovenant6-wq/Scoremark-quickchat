@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-
+import { FaCopy, FaExternalLinkAlt, FaTrash } from 'react-icons/fa';
 interface LinkData {
   id: number;
   code: string;
@@ -37,6 +37,21 @@ export default function Dashboard() {
       console.error(error);
       alert("Failed to delete link.");
     }
+  };
+
+  const copyLink = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      alert('Link copied to clipboard');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to copy link');
+    }
+  };
+
+  const openLink = (code: string) => {
+    const url = `/${code}`;
+    window.open(url, '_blank');
   };
 
   const totalLinks = links.length;
@@ -100,15 +115,14 @@ export default function Dashboard() {
 
       </div>
 
-      <table className="w-full border border-gray-700">
+      <table className="w-full border-collapse overflow-hidden rounded-xl">
 
         <thead className="bg-slate-800">
           <tr>
-            <th className="p-4">Code</th>
-            <th className="p-4">Phone</th>
-            <th className="p-4">Clicks</th>
-            <th className="p-4">Message</th>
-            <th className="p-4">Action</th>
+           <th className="p-4 bg-gray-800">Phone</th>
+<th className="p-4 bg-gray-800">Clicks</th>
+<th className="p-4 bg-gray-800">Created</th>
+<th className="p-4 bg-gray-800">Actions</th>
           </tr>
         </thead>
 
@@ -125,12 +139,33 @@ export default function Dashboard() {
                 <td className="p-4">{link.clicks}</td>
                 <td className="p-4">{link.message}</td>
                 <td className="p-4">
-                  <button
-                    onClick={() => deleteLink(link.id)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex gap-3 justify-center">
+
+                    <button
+                      onClick={() => copyLink(link.code)}
+                      className="text-blue-500 hover:text-blue-700"
+                      aria-label="Copy link"
+                    >
+                      <FaCopy />
+                    </button>
+
+                    <button
+                      onClick={() => openLink(link.code)}
+                      className="text-green-500 hover:text-green-700"
+                      aria-label="Open link"
+                    >
+                      <FaExternalLinkAlt />
+                    </button>
+
+                    <button
+                      onClick={() => deleteLink(link.id)}
+                      className="text-red-500 hover:text-red-700"
+                      aria-label="Delete link"
+                    >
+                      <FaTrash />
+                    </button>
+
+                  </div>
                 </td>
               </tr>
 
@@ -140,6 +175,13 @@ export default function Dashboard() {
 
       </table>
 
+      <p className="text-gray-400 mb-6">
+        Manage and track all generated WhatsApp links.
+      </p>
+
+      <footer className="text-center text-gray-500 mt-12 mb-6">
+        Built with  by Covenant Nsikak Johnson 
+      </footer>
     </div>
   );
 }

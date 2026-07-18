@@ -22,6 +22,20 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
+  app.get("/analytics", (req, res) => {
+  const rows = db.prepare(`
+    SELECT
+      code,
+      phone,
+      message,
+      clicks,
+      created_at
+    FROM links
+    ORDER BY id DESC
+  `).all();
+
+  res.json(rows);
+});
   console.log(`Server running on http://localhost:${PORT}`);
 });
 app.post("/generate", (req, res) => {
@@ -98,5 +112,31 @@ app.delete("/delete/:id", (req, res) => {
   res.json({
     success: true,
     message: "Link deleted successfully",
+  });
+});
+app.get("/:code", (req, res) => {
+  const { code } = req.params;
+
+  const link = db.prepare(
+    "SELECT * FROM links WHERE code = ?"
+  ).get(code);
+
+  if (!link) {
+    return res.status(404).send("Link not found");
+  }
+
+  db.prepare(
+    "UPDATE links SET clicks = clicks + 1 WHERE code = ?"
+  ).run(code);
+
+  res.redirect(link.url);
+});
+app.delete("/delete/:code", (req, res) => {
+  const { code } = req.params;
+
+  db.prepare("DELETE FROM links WHERE code = ?").run(code);
+
+  res.json({
+    success: true,
   });
 });
