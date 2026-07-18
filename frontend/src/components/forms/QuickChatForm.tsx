@@ -1,28 +1,51 @@
 import { useState } from "react";
+import axios from "axios";
 import { QRCodeCanvas } from "qrcode.react";
-import { FaCopy, FaWhatsapp } from "react-icons/fa";
-
+// react-hot-toast may not be installed in some environments; use alert fallback
+const toast = {
+  error: (msg: string) => alert(msg),
+};
+import {
+  FaWhatsapp,
+  FaSpinner,
+} from "react-icons/fa";
 export default function QuickChatForm() {
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [generatedLink, setGeneratedLink] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const generateLink = () => {
-    if (!phone || !message) {
-      alert("Please fill all fields.");
-      return;
-    }
+ const generateLink = async () => {
+  if (!phone || !message) {
+    toast.error("Please fill all fields.");
+    return;
+  }
 
-    const cleanPhone = phone.replace(/\D/g, "");
+  const cleanPhone = phone.replace(/\D/g, "");
+  const normalizedPhone = cleanPhone.replace(/^0+/, "");
 
-    const link = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+  setLoading(true);
+  try {
+    const response = await axios.post(
+      "http://localhost:5000/generate",
+      {
+        phone: normalizedPhone,
+        message,
+      }
+    );
 
-    setGeneratedLink(link);
-  };
+    setGeneratedLink(response.data.shortUrl);
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(generatedLink);
-    alert("Link copied!");
+setTimeout(() => {
+  setLoading(false);
+}, 700);
+
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to generate link.");
+  } finally {
+    setLoading(false);
+  }
   };
 
   return (
@@ -64,31 +87,23 @@ export default function QuickChatForm() {
     onChange={(e)=>setMessage(e.target.value)}
     className="w-full bg-black/30 border border-gray-700 rounded-xl p-4 outline-none focus:border-orange-500 resize-none"
 />
-       <button
-    onClick={generateLink}
-    className="w-full py-4 rounded-xl bg-linear-to-r from-orange-500 to-red-500 hover:scale-105 duration-300 font-bold text-lg flex items-center justify-center gap-3"
+        <button
+  onClick={generateLink}
+  disabled={loading}
+  className="w-full py-4 rounded-xl bg-linear-to-r from-orange-500 to-red-500 hover:scale-105 duration-300 font-bold text-lg flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
 >
-    <FaWhatsapp />
-    Generate WhatsApp Link
+  {loading ? (
+    <>
+      <FaSpinner className="animate-spin text-xl" />
+      Generating Link...
+    </>
+  ) : (
+    <>
+      <FaWhatsapp className="text-xl" />
+      Generate WhatsApp Link
+    </>
+  )}
 </button>
-      </div>
-
-      {generatedLink && (
-       <div className="mt-10 bg-white/5 rounded-2xl p-6 border border-white/10">
-
-          <input
-            value={generatedLink}
-            readOnly
-            className="w-full p-4 rounded-xl bg-black/30"
-          />
-
-          <button
-            onClick={copyLink}
-            className="mt-4 w-full bg-green-600 hover:bg-green-700 py-3 rounded-xl flex justify-center items-center gap-2"
-          >
-            <FaCopy />
-            Copy Link
-          </button>
 
           <div className="flex justify-center mt-8 bg-white p-6 rounded-2xl">
 
@@ -100,7 +115,6 @@ export default function QuickChatForm() {
           </div>
 
         </div>
-      )}
 
     </div>
   );
