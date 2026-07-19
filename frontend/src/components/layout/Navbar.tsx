@@ -1,5 +1,6 @@
 import { FaWhatsapp } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 export default function Navbar() {
     return (
@@ -41,7 +42,8 @@ export default function Navbar() {
 
                 </div>
 
-                <button
+                <Link
+                    to="/dashboard"
                     className="bg-orange-500
                     hover:bg-orange-600
                     transition
@@ -51,7 +53,7 @@ export default function Navbar() {
                     font-semibold"
                 >
                     Dashboard
-                </button>
+                </Link>
 
             </div>
         </motion.nav>
