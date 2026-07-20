@@ -58,7 +58,7 @@ app.post("/generate", (req, res) => {
   `).run(code, phone, message, whatsappLink);
 
   res.json({
-    shortUrl: `https://scoremark-quickchat-api.onrender.com/${code}`,
+    shortUrl: `https://scoremark-quickchat-api.onrender.com/`,
   });
 });
 db.prepare(`
