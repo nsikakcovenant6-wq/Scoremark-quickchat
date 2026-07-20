@@ -62,7 +62,7 @@ export default function QuickChatForm() {
 
   try {
    const response = await axios.post(
-  "http://localhost:5000/generate",
+  "http://scoremark-quickchat-api.onrender.com/generate-link",
   {
     phone: normalizedPhone,
     message,
